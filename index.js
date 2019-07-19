@@ -52,7 +52,7 @@ server.get("/projects", async (req, res) => {
 
 server.get("/actions", async (req, res) => {
   try {
-    const actions = await getAllProjects();
+    const actions = await getAllActions();
     if (actions.length > 0) {
       return res.status(200).json(actions);
     } else {
@@ -67,14 +67,14 @@ server.get("/projects/:id", async (req, res) => {
   try {
     const project = await getProjectById(req.params.id);
     const actions = await getActionsByProjectId(req.params.id);
-    if (projects) {
-      if (actions) {
-        return status(200).json({
-          ...project,
+    if (project) {
+      if (actions.length === 0) {
+        return res.status(200).json({
+          project,
           actions: "No actions found for this project"
         });
       } else {
-        return status(200).json({ ...project, ...actions });
+        return res.status(200).json({ project, actions });
       }
     } else {
       return res.status(404).json({ message: "Found no project with this ID" });
@@ -86,8 +86,9 @@ server.get("/projects/:id", async (req, res) => {
 
 server.post("/projects", async (req, res) => {
   try {
-    const project = await insertProject(req.body);
-    if (project) {
+    const id = await insertProject(req.body);
+    if (id.length > 0) {
+      const project = await getProjectById(id[0]);
       return res.status(200).json(project);
     } else {
       return res.status(400).json({ message: "Project could not be inserted" });
@@ -98,17 +99,18 @@ server.post("/projects", async (req, res) => {
 });
 
 server.post("/actions", async (req, res) => {
-    try {
-      const action = await insertAction(req.body);
-      if (action) {
-        return res.status(200).json(action);
-      } else {
-        return res.status(400).json({ message: "Action could not be inserted" });
-      }
-    } catch (err) {
-      return res.status(500).json({ error: "Server error" });
+  try {
+    const id = await insertAction(req.body);
+    if (id.length > 0) {
+      const action = await getActionById(id[0]);
+      return res.status(200).json(action);
+    } else {
+      return res.status(400).json({ message: "Action could not be inserted" });
     }
-  });
+  } catch (err) {
+    return res.status(500).json({ error: "Server error" });
+  }
+});
 
 server.listen(4000, () => {
   console.log("listening on 4000");

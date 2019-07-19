@@ -4,7 +4,6 @@ exports.up = function(knex) {
       table.increments();
       table
         .text("name")
-        .unique()
         .notNullable();
       table.text("description").notNullable();
       table
